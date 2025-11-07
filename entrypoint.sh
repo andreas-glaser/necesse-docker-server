@@ -55,10 +55,17 @@ adjust_permissions() {
 }
 
 get_manifest_buildid() {
-    manifest_path="${STEAMCMD_DIR}/steamapps/appmanifest_${APP_ID}.acf"
-    if [ -f "${manifest_path}" ]; then
-        awk -F'"' '/"buildid"/ {print $4; exit}' "${manifest_path}"
-    fi
+    # SteamCMD writes manifests into the install dir's steamapps folder when force_install_dir is used.
+    # Fall back to the SteamCMD root for older layouts or if users override directories.
+    for manifest_path in \
+        "${APP_DIR}/steamapps/appmanifest_${APP_ID}.acf" \
+        "${STEAMCMD_DIR}/steamapps/appmanifest_${APP_ID}.acf"
+    do
+        if [ -f "${manifest_path}" ]; then
+            awk -F'"' '/"buildid"/ {print $4; exit}' "${manifest_path}"
+            return
+        fi
+    done
 }
 
 fetch_remote_buildid() {
